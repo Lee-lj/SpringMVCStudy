@@ -1,0 +1,76 @@
+前端(html，jsp)发出请求->controller(SpringMVC)接受请求->在service层，dao层获取数据->跳转至一个查找成功的页面，并且返回查到的值(success.jsp)
+处理模型数据:
+     ctrl+O查看类中的所有方法
+               如果跳转的时候需要带数据:V（视图页面success.jsp）、M（Model:例如StudentService），有如下方式:
+            ModelAndView,ModelMap,Map,Model,这几种方式将数据放在request作用域
+                                    还可以使用注解:@SessionAttributes,@ModelAttribute
+                                    
+     ModelAndView方式:
+        servlet.java:
+            //带数据跳转，ModelAndView方式
+	        @RequestMapping(value = "testModelAndView")
+	        public ModelAndView testModelAndView() {//返回值既有页面，也有视图，所以类型就是ModelAndView
+		    ModelAndView mv=new ModelAndView("success");//声明View页面就是success,springmvc.xml配置的视图解析器在这也会自动加前缀后缀
+		    Student student=new Student();
+		    student.setStuNo(226);
+		    student.setStuName("lj");//通过mv的addObject方法来传值，addObject使用K V对来匹配
+		    mv.addObject("STUDENT", student);//相当于request.setAttribute(K,V);
+		    return mv;
+		success.jsp: ${requestScope.student.stuNo} -${requestScope.student.stuName}
+		index.jsp:<a href="testModelAndView">test model and view</a>
+		
+	ModelMap,Map,Model:
+	//带数据跳转，Map方式
+	@RequestMapping(value = "testMap")
+	public String testMap(Map<String,Object> m) {//返回值既有页面，也有视图，所以类型就是ModelAndView
+		Student student=new Student();
+		student.setStuNo(226);
+		student.setStuName("lj");
+		m.put("student1",student);
+		return "success";
+			        	
+    }
+		
+	//带数据跳转，ModelMap方式
+	@RequestMapping(value = "testModelMap")
+	public String testModelMap(ModelMap mm) {
+		Student student=new Student();
+		student.setStuNo(226);
+		student.setStuName("lj");
+		mm.put("student2", student);//仍然放入request域
+	    return "success";//view
+					        	
+	}	
+				
+	//带数据跳转，ModelMap方式
+	@RequestMapping(value = "testModel")
+	public String testModel(Model model) {
+		Student student=new Student();
+		student.setStuNo(226);
+		student.setStuName("lj");
+		model.addAttribute("student3", student);
+		return "success";
+					        	
+	}
+	
+	index.jsp:<a href="testModelAndView">test model and view</a>
+	          <a href="testMap">test Map</a>
+	          <a href="testModelMap">test ModelMap</a>
+	          <a href="testModel">test model </a>
+	          
+	success.jsp:${requestScope.student.stuNo} -${requestScope.student.stuName}<br>
+                 ${requestScope.student1.stuNo} -${requestScope.student1.stuName}<br>
+                 ${requestScope.student2.stuNo} -${requestScope.student2.stuName}<br>
+                 ${requestScope.student3.stuNo} -${requestScope.student3.stuName}<br>
+
+默认情况下Spring MVC将模型中的数据存储到request域中。当一个请求结束后，数据就失效了。如果要跨页面使用。那么需要使用到session。而@SessionAttributes注解就可以使得模型中的数据存储一份到session域中。
+    注解@SessionAttributes()中的属性:
+    names：这是一个字符串数组。里面应写需要存储到session中数据的名称。
+　　    types：根据指定参数的类型，将模型中对应类型的参数存储到session中
+   　      values             其实和names是一样的。
+
+            如何将这些数据放入session域: 在类前加上注解@SessionAttributes();，然后在success.jsp中加入${sessionScope.student.stuNo} -${sessionScope.student.stuName}<br>
+          @SessionAttributes(value="student4","student1")//如果要在request中存放student4对象，则同时将该对象放入session域中，放多个用逗号隔开即可
+          @SessionAttributes(types = Student.class)//如果要在request中存放student4类型的对象，则同时将该类型的对象放入session域中,例如Student类都会放入
+          @SessionAttributes(types = {Student.class,Address.class})//可以同时将多个类型的对象放入session域中
+		

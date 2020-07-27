@@ -1,0 +1,66 @@
+UI->service->dao
+
+UI层又分为前端:html,jsp  和后台Servlet，SpringMVC就是工作在servlet
+Spring相比于Spring多了一个spring-webmvc.jar
+
+Spring程序:jsp进入servlet然后返回一个jsp，Spring就工作在Servlet阶段
+
+普通的servlet流程:
+普通的请求会被url-pattern拦截，交给对应的servlet去处理。如果使用springMVC而不是用普通的servlet，需要让springmvc介入程序中
+
+Spring程序的建立:
+     1.创建web工程->dynamic web project-web module version-2.5
+     2.在Java resource的src中建立Spring Bean Configration file，将jar包引入到webContext的WEB-INF中
+     3.在2中建立的xml文件的namespace打开aop，context，MVC,beans
+     4.让SpringMVC介入servlet(需要配置一个SpringMVC自带的servlet):ctrl+shift+t 找到Dispatcherservlet，然后关联源码(webMVC的源码jar)
+     5.在web.xml中建立Servlet和Servlet的映射文件Servlet-Mapper:
+          <servlet>
+		     <servlet-name>SpringDispatcherServlet</servlet-name><!-- 名字与servlet的映射mapper文件映射 -->
+		     <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class><!-- 
+		     	class就是 DispatcherServlet中的全类名 -->
+		     <load-on-startup>1</load-on-startup><!-- 让项目启动时自动加载 -->
+	         <init-param>
+	         	<param-name></param-name>
+	    	    <param-value></param-value>
+	         </init-param><!-- 说明springmvc.xml配置文件在哪里 -->
+	      </servlet>
+
+	      <servlet-mapping>
+	     	<servlet-name>SpringDispatcherServlet</servlet-name><!-- 为这个servlet起名 -->
+	     	<url-pattern>/</url-pattern><!-- servlet拦截的范围 / 是全部 -->
+	      </servlet-mapping>
+	             这里org.springframework.web.servlet.DispatcherServlet就是SpringMVC的入口，将一切的请求都交给SpringMVC去处理
+	  6.在DispatcherServlet类或父类中找contextConfigLocation，通过  contextConfigLocation来说明springmvc.xml配置文件在哪里
+	                如果在默认路径:WEB-INF和lib同级，名字是  SpringDispatcherServlet-servlet.xml那麽久可以不加
+	  
+	     <load-on-startup>1</load-on-startup><!-- 让项目启动时自动加载 -->
+	        <init-param>
+	        	<param-name>contextConfigLocation</param-name>
+	    	    <param-value>classpath:springmvc.xml</param-value>
+	        </init-param><!-- 说明springmvc.xml配置文件在哪里 -->
+	  7.在WEB-INF中建立index.jsp,说明输入的类型:welcome就是这一种类型
+	   <body>
+                   <a herf="welcome">first springmvc * welcome</a>
+       </body>
+	  8.使用普通servlet的话在Java-src中建立servlet，使用springMVC的话直接建立class(servlet包名一般都是以servlet、controller、handler、action结尾)
+	                     将一个类变成有特定功能的类可以注解，配置，实现接口或者类三种方法，SpringMVC一般使用注解和配置来实现
+	                     @Controller//注解，说明不是一个普通类，而是一个控制器
+                         public class SpringMVCServlet {
+	
+	                          @RequestMapping("welcome")//@RequestMapping就是指明要拦截的jsp的welcome类型
+	                          public String welcome() {
+		                      return "success" ;
+	                      }
+      9.在springmvc.xml中添加Scanner扫描器，将添加了注解的包放入扫描器:
+              <!-- 扫描添加了注解的包 -->      
+              <context:component-scan base-package="org.mvc.Servlet"></context:component-scan>
+      10.在springmvc.xml中配置视图解析器:
+              <!-- 配置视图解析器 ctrl+shift+t  internalResourceViewResolver ,然后在他或它的父类中找到prefix(前缀)或者suffix(后缀)-->
+              <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+                  <property name="prefix" value="/view/"></property>
+                  <property name="suffix" value=".jsp"></property>
+                  <!-- 视图解析器就是在SpringMVCServlet的@RequestMapping("welcome")拦截到welcome类型，然后返回success，
+                                                     自动的给success加上前缀和后缀(/view/success.jsp)，实现重定向，返回success的页面 ，这里就要根据你加的前缀后缀在webcontent下建立新文件夹和jsp文件-->
+              </bean>
+              
+      11.根据你加的前缀后缀在webcontent下建立新文件夹和jsp文件,注意修改编码格式UTF-8

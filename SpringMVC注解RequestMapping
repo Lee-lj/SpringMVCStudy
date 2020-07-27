@@ -1,0 +1,74 @@
+@Controller//注解，声明是一个特殊类
+public class SpringMVCServlet {
+	
+	@RequestMapping("welcome")//@RequestMapping拦截welcome的请求
+	public String welcome() {
+		return "success" ;
+	}
+ 也可以将注解写在类前面，例如:
+@Controller//注解，声明是一个特殊类
+@RequestMapping("handler")
+public class SpringMVCServlet {
+	
+	@RequestMapping("welcome")//@RequestMapping拦截welcome的请求
+	public String welcome() {
+		return "success" ;
+	}
+那么对应的web.xml中的<a href="welcome">first springmvc * welcome</a>
+变为:<a href="handler/welcome">first springmvc * welcome</a>
+注解在类的前面,那么先写具体的类前面的注解名     再写和方法名拦截的相同的标识符welcome
+
+注解可以和方法名，类名不一致
+
+注解的默认值:
+          @RequestMapping(value="",method=RequestMethod.POST),method=RequestMethod.POST声明拦截的是POST请求方式，而默认的请求方式都是get类
+     如果使用POST请求方式，，那么@RequestMapping(value="handler",method=RequestMethod.POST)，handler必须加上value=
+     
+    @RequestMapping(value="",method=RequestMethod.POST,params = {"age","name"})   
+    params = {}是输入的参数值，可以写一个或多个，加则必须在声明POST请求的index.jap中加入<input name="你在para中加入的参数">
+    <form action="welcome" method="POST">
+        input age:<input name="age"><br>
+        input name:<input name="name">
+        <!-- 直接在前面输入在web上提示的语句 <br>表示换行-->
+        <input type="submit" value="POST">
+    </form> 
+  @RequestMapping(value="welcome2",headers= {} )//headers是对请求头信息的约束，在网页中F12会发现有各种的请求头，例如cookie，cache等等
+  Accept  指定MIME类型
+  Accept-Charset  编码，例如utf-8
+
+  Accept-Encoding  编码方式，例如使用gzip压缩
+
+  Accept-Language  语言，例如zh-cn
+
+  Authorization  加密方式
+
+  Connection  连接设置，例如Keep-Alive
+
+  Content-Length  只用于post时，post数据的长度。
+
+  Cookie  Cookie
+
+  Host  主机
+
+  Referer  引用的页面
+
+  User-Agent  浏览器信息
+  
+  
+  ant（构建工具）风格的请求路径:主要是省略index,jsp中的多层目录在SpringMVCServlet.Java中的目录结构不匹配
+   ？ 代表任意一个单字符
+ * 任意个字符(0个或者多个)
+ ** 任意个目录 
+ SpringMVCServlet.Java:
+ @RequestMapping(value="wel2/*/test")
+	public String wel2() {
+		return "success";
+	}
+ index.jsp
+     <a href="wel2/sffsfsf/test">first springmvc * welcome GET</a>
+   
+   通过@PathVariable获取动态参数: 在index.jsp中<a href="welcome4/lj">44444</a>,前端穿入一个值lj，然后传给SpringMVCServlet.Java的welcome4
+ @RequestMapping(value="welcome4/{name}")
+	public String wel4(@PathVariable("name") String name) {
+		return "success";
+	}

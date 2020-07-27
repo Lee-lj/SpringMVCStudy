@@ -1,0 +1,30 @@
+	<servlet>
+	    <servlet-name>SpringDispatcherServlet</servlet-name><!-- 名字与servlet的映射mapper文件映射 -->
+	    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class><!-- 
+	    	class就是 DispatcherServlet中的全类名 -->
+	    	
+	    <init-param><!-- 说明springmvc.xml配置文件在哪里 -->
+	    	<param-name>contextConfigLocation</param-name><!-- contextConfigLocation是类中的查找xml文件的方法 -->
+	    	<param-value>classpath:springmvc.xml</param-value>
+	    </init-param>
+	    <load-on-startup>1</load-on-startup><!-- 让项目启动时自动加载 -->
+    </servlet>
+
+	<servlet-mapping>
+		<servlet-name>SpringDispatcherServlet</servlet-name><!-- 为这个servlet起名 -->
+		<url-pattern>/</url-pattern><!-- mvc拦截的范围 / 是全部 -->
+	</servlet-mapping>
+	
+	其中<url-pattern>/</url-pattern>中
+          /:拦截一切请求  ，注意不是 /*
+          /user:拦截以 /user开头的请求
+          /user/abc.do  :只拦截该abc请求
+          .action:只拦截 .action结尾的请求
+          
+  SpringMVC兼容MVC和servlet:
+  web.xml中如果        <url-pattern>.action</url-pattern>
+  
+      那么在index.jsp中
+    <a href="welcome.action">first springmvc * welcome</a>
+    <a href="welcome.action">first springmvc * welcome</a>只要后缀带有.action那么就会交由SpringMVC处理
+    如果是普通的 <a href="welcome">first springmvc * welcome</a>，那么就交给servlet处理

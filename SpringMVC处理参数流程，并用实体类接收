@@ -1,0 +1,49 @@
+  mvc处理参数的流程:
+    1.前端发出请求a->a寻找对应的@RequestMapping
+    2.@RequestMapping使用对应的方法:
+       public String 方法名(@RequestHeader("Accept-Language") String AL){
+                        @CookieValue("JSESSIONID") String JESSIONID
+                        @RequestParam("sname")String sname
+                        @PathVariable("id") int id，选择合适的注解，然后使用
+	       	return "success";
+	   }
+	   
+   
+   使用（实体类）接收请求参数,必须实现index.jsp的form表单的name属性和实体类中的属性一致
+   
+   别忘了加form的submit   <input type="submit" value="POST">
+    
+    <!-- 使用实体类接受属性 -->
+    <form action="testObject">
+        <input name="stuNo" type="number">
+        <input name="stuName" type="text">
+        <input name="stuAge" type="number">
+        <input name="address.homeAddress" type="text">
+        <input name="address.schoolAddress" type="text">
+    </form>
+   
+    //使用对象(实体类)接收值
+	@RequestMapping(value = "testObject")
+	public String getStudnetINF(Student student){
+		/*studnet的属性必须和index.jsp中的form表单的name值一致，支持级联属性(Address中的home和school address),例如:
+		 * <input name="address.homeAddress" type="text">
+           <input name="address.schoolAddress" type="text">
+		 */	
+		System.out.println(student.toString());
+		return "success";
+		
+		
+		
+		
+在SpringMVC中使用原生态的Servlet-api: 直接写在servlet.java中，写出要使用的类，接口，参数即可
+
+    <a href="testServletAPI">test Servlet-API</a>
+ 
+    //使用原生态的servletAPI
+	@RequestMapping(value = "testServletAPI")
+	public String servletAPI(HttpServletRequest request,HttpServletResponse response) {
+		//request.getParameter(name);
+		System.out.println(request+"    "+response);
+		return "success";
+		
+	}

@@ -1,0 +1,116 @@
+InternalResourceViewResolver视图解析器其他功能:
+      前端index.jsp发出请求->控制器Controller(@RequestMapping)->success.jsp
+      要使用SpringMVC可以直接实现index.jsp->success.jsp:
+       <mvc:view-controller path="控制器的标签，例如“handler/welcome”" view-name="返回的页面例如success"/>，
+           1.SpringMVC.xml(要打开namespace中的MVC):
+              <!-- 配置解析器，使前端直接到响应，不经过controller view-name仍然会被视图解析器加上前后缀-->
+              <mvc:view-controller path="testMVCViewController" view-name="success"/>
+           2.index.jsp:
+              <br>
+              <a href="testMVCViewController">test MVC View Controller </a>
+              <br>
+                如果配置了这个，使请求不经过Controller，那么Controller中的控制器都会被覆盖，不被执行，
+                如果想让Controller的@RequestMapping和mvc:view-controller共存，需要加入注解
+       springMVC.xml:   加上注解即可
+        <!-- MVC的基础配置 可以实现很多功能，在这里用来实现直接返回success和经过Controller的共存-->
+        <mvc:annotation-driven></mvc:annotation-driven>
+         
+         
+     请求转发方式:前端发出信息，后端处理还是在Controller的地址中:http://localhost:8080/SpringMvcProject/testModel，并没有进入success.jsp
+     这就是请求转发方式(请求给Controller。Controller再给success)，地址栏不变
+              请求转发方式前缀为forward: 重定向为redirect:,用这两个前缀指定跳转方式时，视图解析器不会自动添加前后缀，所以要自己写全
+                   普通请求转发方式:
+                   @RequestMapping(value="welcome3")
+	               public String wel3() {
+	               	return "success";
+	               }
+	               加前缀:@RequestMapping(value="welcome3")
+	               public String wel3() {//请求跳转方式，地址栏还是在Controller层
+	               	return "forward:/view/success.jsp";
+	                }
+	              请求跳转:       
+	               @RequestMapping(value="welcome3")
+	               public String wel3() {//请求跳转方式，地址栏还是在Controller层
+	               	return "forward:/view/success.jsp";
+	               }
+	               地址栏变为http://localhost:8080/SpringMvcProject/view/success.jsp
+	               
+	               
+	               
+处理静态资源:
+        静态资源:html js css 图片，视频，这种不与用户交互的资源统称静态资源	，反之，与用户交互的资源为动态资源
+        在SpringMVC中处理静态文件不需要重启tomcat，如果访问静态资源404原因就是之前通过url的/统一交给了SpringMVC的入口，
+        所以该请求去找对应的@RequestMapping，但是静态资源不可能通过@RequestMapping处理，所以需要让需要MVC处理的交给MVC，不需要的交给Tomcat默认的Servlet处理
+        Tomcat默认的Servlet处理:如果有对应的请求拦截，交给相应的servlet处理，如果没有对应的servlet，则直接访问。
+        tomcat默认的Servlet在哪里？在tomcat配置文件\conf\web.xml中检索default
+                           例如web.xml中：<url-pattern>/abc<url-pattern>,则交给abc去处理
+              <servlet>
+		          <servlet-name>abc</servlet-name>
+		          <servlet-class>xxx.xxx.xx.ABCServlet</servlet-class>
+	          </servlet>
+	          <servlet-mapping>
+	          	<servlet-name>abc</servlet-name>
+	          	<url-pattern>/abc</url-pattern>
+	          </servlet-mapping>
+        
+        处理 静态资源:有RequestMapping则交给MVC处理，没有RequestMapping则交给默认的servlet处理
+                   实现:在springMVC.xml中增加配置<mvc:default-servlet-handler>  <mvc:annotation-driven></mvc:annotation-driven>
+        
+ 类型转换:前端(jsp，html)到后端servlet的类型转换
+    1.SprnigMVC自带一些类型转换器:
+                   比如
+                   @RequestMapping(value = "filterAdd/{id}",method=RequestMethod.POST)
+	               public String hiddenfilter(@PathVariable("id") int id) {
+		               System.out.println("增加"+id);
+		               //然后调service实现数据库的增
+		               return "success";
+	               }中的int换为String还是可以传入int类型的值
+	2.自定义类型转换器:
+	      1.编写自定义转换器的类(实现Converter接口):
+	               public class MyConverter implements Converter<String, Student>{
+	          @Override
+	          public Student convert(String source) {//jsp传来的属性，例如226-lj-21
+	          	//Source接收前端传来的String 226-lj-21
+	          	String[] studentArrays=source.split("-");//将前端传来的226lj21用-分隔放入数组中
+	          	Student student=new Student();
+	          	student.setStuNo(Integer.parseInt(studentArrays[0]));//将字符串转换为整数
+	          	student.setStuName(studentArrays[1]);
+	          	student.setStuAge(Integer.parseInt(studentArrays[2]));
+	          	return student;
+	          }
+	          //通过Converter的ST（Source，target）来指定来源和目标，这里就是指定jsp中传来的String，将它转换为一个学生对象
+	                              具体就是将传来的数据拆分放入数组当中，然后用数组进行类型的转换
+
+          2.配置:将编写的类MyConverter加入MVC容器中:        
+                   <!-- 1.将定义的转换器MyConverter纳入SpringIOC容器 -->
+                   <bean id="myConvertertool" class="org.mvc.Converter.MyConverter"></bean>
+                   <!-- 2.将myConvertertool纳入SpringMVC提供的转换器bean:org.springframework.context.support.ConversionServiceFactoryBean中 -->
+                   <bean id="myconversionService" class="org.springframework.context.support.ConversionServiceFactoryBean">
+                    <property name="converters">
+                        <set>
+                           <ref bean="myConvertertool"/>         
+                        </set>
+                    </property>
+                   </bean>
+                   <!-- 3.将 conversionService(添加完自定义转换器的bean注册到annotation-driven中)-->
+                   <!-- 这是SpringMVC的基础配置，通过注解来协调 -->
+                   <mvc:annotation-driven conversion-service="myconversionService"></mvc:annotation-driven>  
+        
+                                                       如果index.jsp的name和控制器中的输入类型不一致，那麽会匹配不上，需要加入@RequestParams()来声明index中输入值的name:
+                       <form action="testMyConverter" method="post">
+                                                                      学生信息:<input name="studentINF" type="text">
+                       <input type="submit" value="测试转换器">
+                       </form>
+                       
+                      @RequestMapping(value = "testMyConverter")
+	                  public String testMyConverter(@RequestParam("studentINF") Student student) {
+		                  System.out.println(student.getStuNo()+student.getStuName()+student.getStuAge());
+		                  return "success";
+	                  }
+          public String testMyConverter(@RequestParam("studentINF") Student student)是触发转换器的桥梁，前端传入studentINF，需要将他复制传给对应修饰的student
+                          可以实现接收是String,转换后是Student；
+                          正好符合转换器的类中的方法public Student convert(String source)
+        
+        
+        
+        

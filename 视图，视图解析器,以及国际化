@@ -1,0 +1,49 @@
+Controller返回值:
+    ModelAndView
+    Model         ->都会按照ModelAndView来解析->视图解析器（ViewResolver）->解析完之后生成视图View(jsp/PDF/excel):最终呈现的,
+    view
+    
+  ctrl+shift+t找到View，ctrl+t查看实现类 
+  
+  视图的顶级接口:View
+ 视图解析器的顶级接口:ViewResolver（具体看View实现类）
+ 常见的视图和解析器:InternalResourceView，InternalResourceViewResolver ，他的子类JstView可以解析jstl实现国际化 
+ SpringMVC解析jsp时会默认使用InternalResourceView，如果发现jsp中含有Jstl语言，则自动的转为JstlView，解析jstl实现自动化操作
+ 国际化:针对不同地区，不同国家，进行不同的显示例如一句话，让中国人，外国人理解为同一个意思
+ 
+ 具体实现国际化的步骤:
+      1.创建资源文件(具体看常见文件命名):
+                              基名(base)_语言_国家.properties或者基名(base)_语言.properties:      base_zh_CN.properties或者i18n.properties（internationalization）
+                                        在i18n_zh_CN.properties 找一个hi的值,找不到的话会默认在i18n.properties中查找
+             i18n.properties中会将汉字变为ASCII码值
+                                       在.properties中还是使用KV对来匹配                           
+                      i18n_zh_CN.properties:
+                            resource.welcome=你好
+                            resource.exit=走开
+      2.在springmvc.xml中加载资源文件   ResourceBundleMessageSource就是在MVC响应时介入进行翻译(解析国际化文件)
+       <!-- 加载国际化资源文件 
+       ResourceBundleMessageSource必须在程序加载时加入MVC
+                                   加入 的方法:SpringMVC在启动时会自动查找id="messageSource"的bean，如果有则自动加载，必须命名id为messageSource
+       -->
+       <bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+       <property name="basename" value="i18n"></property>
+       </bean>
+      3.添加jstl.jar , standard.jar	,然后在success.jsp（最后的视图文件中）的头加入
+               <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt"prefix="fmt" %><!--实现国际化  -->
+                                              在body中加入
+      <!-- 加入i18n文件的KEY(前面的值) -->
+      <fmt:message key="resource.welcome"></fmt:message>
+      <fmt:message key="resource.exit"></fmt:message>
+      4.在控制器servlet.java中加入:
+      //国际化
+	  @RequestMapping(value = "testi18n")
+	  public String testi18n() {
+	     	return "success";
+	  }
+	  5.在表单index.java中加入
+	  <br>
+      <a href="testi18n">test i18n </a>
+      <br>
+      
+      
+      测试时可以将浏览器的语言改变，查看不同结果

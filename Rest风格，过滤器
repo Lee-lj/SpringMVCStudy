@@ -1,0 +1,165 @@
+Rest风格:软件编程风格,前后端分离
+枚举类型，GET,POST,DELETE,PUT,类似于sql中的增删改查
+GET:查
+POST:增
+DELETE:删
+PUT:改
+普通浏览器只支持GET,POST,要想实现DELETE和PUT,可以通过增加一个过滤器来实现
+通过约定来使过滤器将输入的请求转变为DELETE,PUT，过滤器对GET,POST不改动（对查和增不进行操作）
+	过滤的条件:
+	1.<input type="hidden" name="_method" value="delete/put"/>   只有POST才可以提交值，所以请求方式必须为POST,
+	hidden表示有隐藏域，并且隐藏域的name的值为_method那么就看value值，是delete就将POST变为delete，是put也从POST变为put
+	2.请求方式为POST
+	
+Springmvc中含有过滤器，只需要web.xml配置就可使用	过滤器的配置:
+	1.过滤器(HiddenHttpMethodFilter):web.xml中增加过滤器
+	<!-- 过滤器的配置 ,目的是增加PUT,DELETE功能-->
+	<!-- 拦截器的拦截一切请求为/* ,filter-class是HiddenHttpMethodFilter类，需要导入源码jar-->
+	<filter>
+	<filter-name>HiddenHttpMethodFilter</filter-name>
+	<filter-class>org.springframework.web.filter.HiddenHttpMethodFilter</filter-class>
+    </filter>
+
+	<filter-mapping>
+		<filter-name>HiddenHttpMethodFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+	
+	2.index.jsp:表单
+	<!-- 过滤器 实现增删改查-->
+    <form action="filterAdd/1234" method="post">
+        <input type="submit" value="增加">
+    </form>
+    
+    <form action="filterDelete/1234" method="post">
+        <input type="hidden" name="_method" value="DELETE">
+        <input type="submit" value="删除">
+    </form>
+    
+    <form action="filterPut/1234" method="post">
+        <input type="hidden" name="_method" value="PUT">
+        <input type="submit" value="更改">
+    </form>
+    
+    <form action="filterSelect/1234" method="get">
+        <input type="submit" value="查找">
+    </form>
+    
+    3.springmvcservlet.java:  控制器
+   	@RequestMapping(value = "filterAdd/{id}")
+	public String hiddenfilter(@PathVariable("id") int id) {
+		System.out.println("增加"+id);
+		//然后调service实现数据库的增
+		return "success";
+	}
+	@RequestMapping(value = "filterDelete/{id}")
+	@ResponseBody()
+	public String hiddenfilter1(@PathVariable("id") int id) {
+		System.out.println("删除"+id);
+		//然后调service实现数据库的增
+		return "success";
+	}
+	@RequestMapping(value = "filterPut/{id}")
+	@ResponseBody()
+	public String hiddenfilter2(@PathVariable("id") int id) {
+		System.out.println("更改"+id);
+		//然后调service实现数据库的增
+		return "success";
+	}
+	@RequestMapping(value = "filterSelect/{id}")
+	public String hiddenfilter3(@PathVariable("id") int id) {
+		System.out.println("查找"+id);
+		//然后调service实现数据库的增
+		return "success";
+	}
+	删和改一定要加入注解@ResponseBody()，不然会405
+	还可以直接在注解中加入method=RequestMethod.GET/PUT/DELETE/POST限制请求方式
+	@RequestMapping(value = "filterAdd/{id}",method=RequestMethod.POST)，增删改查可以使用相同的value，这是因为后面的method的属性值不同，故而可以匹配
+	
+	过滤器中 处理put|delete请求的部分源码：
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
+
+		HttpServletRequest requestToUse = request;
+
+		if ("POST".equals(request.getMethod()) && request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE) == null) {
+			String paramValue = request.getParameter(this.methodParam);
+			if (StringUtils.hasLength(paramValue)) {
+				requestToUse = new HttpMethodRequestWrapper(request, paramValue);
+			}
+		}
+
+		filterChain.doFilter(requestToUse, response);
+	}
+	原始请求：request,该请求默认只支持get post  header这三种请求
+	但是如果 是"POST"  并且有隐藏域		<input type="hidden"  name="_method" value="DELETE"/>
+	则，过滤器 将原始的请求 request加入新的请求方式DELETE，并将原始请求 转为 requestToUse请求（request+Delete请求）
+	最后将requestToUse 放入 请求链中， 后续再事情request时  实际就使用改造后的 requestToUse
+
+    <!-- 新的传值方式 ,input name 中type默认为text-->
+    <form action="inputtest" method="get">
+        <input name="sname" type="text">
+        <input type="submit" value="查找">
+    </form>
+	//新的传值方式对应的接受方式，通过注解来传入值        普通方式传值用@RequestParam传值
+	@RequestMapping(value = "inputtest")
+	public String inputtest(@RequestParam("sname")String sname){
+    //  String name = request.getParameter("sname");servlet方式传入输入的值
+		System.out.println("   "+sname);
+		return "success";
+	}
+	
+	<form action="filterSelect/1234" method="get">
+        <input type="submit" value="查找">
+    </form>
+	@RequestMapping(value = "filterSelect/{id}",method=RequestMethod.GET)  rest风格传值用@PathVariable方式传值
+	public String hiddenfilter3(@PathVariable("id") int id) {
+		System.out.println("查找"+id);
+		//然后调service实现数据库的增
+		return "success";
+	}
+	
+	例如表单index.xml中，如果输入的值是路径，例如<form action="filterSelect/1234" method="get">，则用@Path来传值
+	普通传值，传的值不在路径中显示，<form action="inputtest" method="get">用@RequestParams
+	
+	当表单有多个值，可以传入一个或几个的值，
+	<form action="inputtest" method="get">
+	    <input name="age" type="text">
+        <input name="sname" type="text">
+        <input type="submit" value="查找">
+    </form>
+    这时可以在public String inputtest(@RequestParam("sname")String sname,@RequestParam("age")Int age)中声明
+    也可以直接public String inputtest(@RequestParam),不声明
+    
+    //reqquestParam中的属性值示例
+	@RequestMapping(value = "inputtest")
+	public String inputtest1(@RequestParam("sname")String sname,
+			@RequestParam(value="sname",required = false,defaultValue = "226")String age)
+	     //required表名该值是否可以为空，默认为ture，表示不能为空,defaultValue表示如果不输入值，那么默认值就为226
+	{
+		return "success";
+	},可以一次输入多个值
+	
+	
+获取请求头信息@RequestHeader	
+<a href="getRequestHeader">get the RequestHeader</a>
+
+	//获取头信息
+	@RequestMapping(value = "getRequestHeader")
+	public String getRequestHeader(@RequestHeader("Accept-Language") String AL){
+		System.out.println(AL);
+		return "success";
+	}
+	,获取其他的请求头只需要改相应的请求头名和类型就可以取到，但是获取cookie时使用@CookieValue
+	cookie:服务器端在接收客户端的第一次请求时，会给该客户端分配一个session，该session包含一个sessionID，
+	并且服务端会在第一次响应客户端时将sessionID赋值给JsessionID,并传递给客户端
+	获取cookie例:获取JsessionID
+	//获取Cookie的jsessionID
+		@RequestMapping(value = "getCookie")
+		public String getCookie(@CookieValue("JSESSIONID") String JESSIONID){
+			System.out.println(JESSIONID);
+			return "success";
+		}
+	    <a href="getCookie">get the Cookie</a>
+	
+	

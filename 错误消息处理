@@ -1,0 +1,43 @@
+需要验证的数据是 Student中的birthday, SpringMVC要求 如果校验失败  则将错误信息自动放入 该对象之后紧挨着的BindingResult中。
+即Student student, BindingResult result之间 不能有其他参数。
+如果要将控制台的错误消息 传到jsp中显示，则可以将错误消息对象放入request域中，然后 在jsp中 从request中获取。 
+
+ 数字格式化之后，如果出现错误， 让错误信息既在web中显示，又在后端报错:
+	  只在后端报错:
+	  //测试格式化日期
+	           @RequestMapping(value = "testDateformat")//如果格式化出错BindBindingResult result用来打印报错信息
+	           public String testDateformat(Student student,BindingResult result) {
+	           	System.out.println(student.getStuNo()+student.getStuName()+student.getBirthday());
+		
+		           //如果错误的数量大于0，那么就遍历打印错误信息
+		           if(result.getErrorCount()>0) {
+			           for(FieldError error: result.getFieldErrors()) {
+			           	System.out.println(error.getDefaultMessage());
+		           	}
+		           }
+	           	return "success";
+	           }只用加上BindingResult result，然后遍历即可         BindingResult result保存钱一个参数的错误信息，位置很重要
+	 在前后端都报错:(前端就是在最后的success.jsp中显示错误信息)
+	       springmvc.java:
+		        //测试格式化日期
+		       @RequestMapping(value = "testDateformat")//如果格式化出错BindBindingResult result用来打印报错信息
+		       public String testDateformat(Student student,BindingResult result,Map<String,Object> map) {
+		       	System.out.println(student.getStuNo()+student.getStuName()+student.getBirthday());
+		
+			       //如果错误的数量大于0，那么就遍历打印错误信息
+		       	if(result.getErrorCount()>0) {
+			       	for(FieldError error: result.getFieldErrors()) {
+			       		System.out.println(error.getDefaultMessage());
+			       		map.put("errors",result.getFieldErrors());//将错误信息传入request域中的errors中
+		        		}
+		           	}
+		        	return "success";
+	       	     }通过Map的KV对将错误信息放入request域中的errors中，然后在success.jsp中通过jstl和standard.jar来对errors这个错误的集合进行打印处理
+	       success.jsp:
+         	   头部必须加入jstl的信息<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%><!--用来对错误信息处理，在前端中显示错误信息  --> 
+	        Body中实现对errors集合的拆分然后遍历:
+	            <c:forEach items="${requestScope.errors}" var="error">
+                ${error.getDefaultMessage()}
+                </c:forEach>
+                <!-- 从springmvc.java接收前端传来的错误信息，因为errors是个集合，所以用error表示一个错误，然后遍历-->
+	        

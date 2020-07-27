@@ -1,0 +1,59 @@
+普通的格式化:SimpleDateForamt sdf=new SimpleDateForamt("yy-MM-dd hh:mm:ss");
+
+SpringMVC提供了注解来实现数据的格式化
+          日期格式化@Dateformat 实现步骤:
+           1.配置SpringMVC.xml(添加):
+                 <!-- 添加数据格式化的bean -->
+                 <bean id="conversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+                     <property name="converters">
+			         <set>
+				 <ref bean="myConverter"/>
+			         </set>
+		         </property></bean>
+                 FormattingConversionServiceFactoryBean:既可以实现格式化、又可以实现类型转换
+           2.通过注解使用(例如学生中添加日期属性)
+            student.java中对应的日期属性
+                  @DateTimeFormat(pattern="yyyy-MM-dd")//通过注解实现日期格式化，即前端输入格式必须为yyyy-MM-dd
+	              private Date birthday;
+           3.测试
+                                      （index.xml）:
+                  <form action="testDateformat" method="post">
+                                                        学号:<input name="stuNo" type="number" value="226">
+                                                        姓名:<input name="stuName" type="text">
+                                                        日期:<input name="birthday" type="text">
+                       <input type="submit" value="测试日期格式化">
+               </form>
+               
+               springservlet.java:
+               //测试格式化日期
+	           @RequestMapping(value = "testDateformat")//如果格式化出错BindBindingResult result用来打印报错信息
+	           public String testDateformat(Student student,BindingResult result) {
+	           	System.out.println(student.getStuNo()+student.getStuName()+student.getBirthday());
+		
+		           //如果错误的数量大于0，那么就遍历打印错误信息
+		           if(result.getErrorCount()>0) {
+			           for(FieldError error: result.getFieldErrors()) {
+			           	System.out.println(error.getDefaultMessage());
+		           	}
+		           }
+	           	return "success";
+	           }
+	           
+	           BindBindingResult result打印错误信息相当于try和catch，出错的话前端不报错
+	  
+	  数字格式化@NumberFormat:和dateformat一样，@Numberformat(pattern="###,#") 表示前端输入该注解修饰的属性时必须以###,#格式输入
+	  
+	  FormattingConversionServiceFactoryBean:既可以实现格式化、又可以实现类型转换,可以实现转换器的第二步，不用再添加ConversionServiceFactoryBean
+	  <bean id="conversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+    <property name="converters">
+         <set>
+            <ref bean="myConvertertool"/>         
+         </set>
+     </property></bean>
+	        
+	        让错误信息既在web中显示，又在后端报错:
+	  
+	  
+	  
+	  
+	  

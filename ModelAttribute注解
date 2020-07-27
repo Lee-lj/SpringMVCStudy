@@ -1,0 +1,32 @@
+被 @ModelAttribute 注释的方法会在Controller每个方法执行（例如SpringmvcServlet.java中的全部方法）之前都执行，要慎用一般用于更新（例如将某个学号的某个属性修改为xx）
+修改=先查询再修改
+表单中的属性可以不完整，但是顺序要和方法的顺序顺序一致要正确
+<!-- ModelAttribute注解的使用 -->
+    <form action="testModelAttribute">
+      studentNo:<input name="stuNo" type="hidden" value="31">
+       stuName: <input name="stuName" type="text">
+         <input type="submit" value="修改">    
+    </form>
+@ModelAttribute//在任何一次的请求前都会先执行带上@ModelAttribute注解的方法
+	public void SelectByNo(Map<String,Object> map) {
+	    //正常的调用service层     StudentService ss=new StudentServiceImpl();
+		//Student student=ss.selectbyId(226);
+		//模拟从三层调取数据库查学生
+		Student student=new Student();
+		student.setStuNo(226);
+		student.setStuName("lj");
+		student.setStuAge(21);
+		map.put("student", student);//通过put方法将查询到的student的值传给下面的修改方法中，map的key如果是方法类型参数的小写，
+		//那麽就会将值传给他，比如testModelAttribute(Student student)中的Student
+		//注意map.put的key必须是方法类型（Student）的首字母小写形式，如果不是那么就在控制器中加入@ModelAttribute注解
+		//例如        map.put("stu", student);
+		//那么        public String testModelAttribute(@ModelAttribute("stu")Student student) {
+	}
+	//ModelAttribute，修改某一属性
+	@RequestMapping(value = "testModelAttribute")
+	public String testModelAttribute(Student student) {
+        student.setStuName(student.getStuName());	
+        System.out.println(student.getStuNo()+student.getStuName()+student.getStuAge());
+		return "success";
+	}
+}

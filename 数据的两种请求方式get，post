@@ -1,0 +1,9 @@
+对于数据的请求方式：get和post，
+  两者最常见的不同：
+ ①get一般用于向服务器请求获取数据，请求参数存放在URL中，并在地址栏可见，而post是向服务器提交数据，数据放置在容器（HTML HEADER）内且不可见；
+ ②get方式提交的数据最多只能有1024字节，而post则没有此限制；
+
+（二）另外的，最近使用了spring的RequestMethod.GET和RequestMethod.POST，偶然间发现，对于spring接口的method的两种定义，在访问时这两种方式的效果有不同：
+①将一个method定义成RequestMethod.GET时，可以直接通过地址访问，这非常方便我们在开发的时候调用到我们的接口并进行测试； 
+②同样的接口，将其method更改为RequestMethod.POST时，你会发现接口在地址栏访问不了了，只有向服务器发起一个POST请求，才会被执行
+

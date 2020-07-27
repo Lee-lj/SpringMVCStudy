@@ -1,0 +1,12 @@
+@DateFormat只能算是格式化输入，不能算是数据的校验
+
+数据校验的几种方式(通过注解):
+          1.JSR303
+          2.Hibernate Validator   Hibernate Validator相当于在JSR303又添加了更多的校验类型
+          具体可见资料中的JSR 303、Hibernate Validator注解.docx
+          
+          使用Hibernate Validator步骤:
+          1.jar包:
+          hibernate-validator-5.0.0.CR2.jar 
+          classmate-0.8.0.jar
+          jboss-logging-3.1.1.GA.jar
